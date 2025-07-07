@@ -30,19 +30,18 @@ async function connectToDatabase() {
 
   try {
     const connection = await mongoose.connect(process.env.MONGODB_URI, {
-      maxPoolSize: 1, // Maintain up to 1 socket connection for serverless
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferCommands: false, // Disable mongoose buffering
-      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
-      family: 4 // Use IPv4, skip trying IPv6
+      maxPoolSize: 1,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false,
+      maxIdleTimeMS: 30000,
+      family: 4
     });
     
     cachedConnection = connection;
-    console.log("✅ Connected to MongoDB");
     return connection;
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("MongoDB connection error:", err);
     throw err;
   }
 }
@@ -53,7 +52,6 @@ app.use(async (req, res, next) => {
     await connectToDatabase();
     next();
   } catch (error) {
-    console.error("Database connection failed:", error);
     res.status(500).json({ 
       error: "Database connection failed",
       message: error.message,
@@ -107,24 +105,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Debug logging middleware
-app.use((req, res, next) => {
-  console.log(`📍 ${req.method} ${req.path} - ${new Date().toISOString()}`);
-  next();
-});
-
 // Public routes (no authentication required)
-console.log("🔗 Loading auth routes at /api/auth");
 app.use("/api/auth", authRoutes);
 
 // Protected routes (authentication required)
-console.log("🔗 Loading invoice routes at /api/invoices");
 app.use("/api/invoices", authenticateToken, invoiceRoutes);
-
-console.log("🔗 Loading client routes at /api/clients");
 app.use("/api/clients", authenticateToken, clientRoutes);
-
-console.log("🔗 Loading user routes at /api/users");
 app.use("/api/users", userRoutes);
 
 // 404 handler for undefined routes
@@ -146,7 +132,5 @@ app.use("*", (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
-console.log("✅ All routes loaded successfully");
 
 export default app; 
