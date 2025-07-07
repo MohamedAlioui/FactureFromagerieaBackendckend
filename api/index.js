@@ -48,11 +48,43 @@ async function connectToDatabase() {
   }
 }
 
+// Connect to database before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    res.status(500).json({ 
+      error: "Database connection failed",
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Fromagerie Invoice API", 
+    version: "1.0.0",
+    endpoints: {
+      health: "/api/health",
+      auth: "/api/auth",
+      invoices: "/api/invoices",
+      clients: "/api/clients",
+      users: "/api/users"
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "OK", 
     message: "Server is running on Vercel",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
     timestamp: new Date().toISOString()
   });
 });
@@ -65,23 +97,22 @@ app.use("/api/invoices", authenticateToken, invoiceRoutes);
 app.use("/api/clients", authenticateToken, clientRoutes);
 app.use("/api/users", userRoutes);
 
-// Root endpoint
-app.get("/", (req, res) => {
-  res.json({ 
-    message: "Fromagerie Invoice API", 
-    version: "1.0.0",
-    docs: "/api/health"
+// 404 handler for undefined routes
+app.use("*", (req, res) => {
+  res.status(404).json({
+    error: "Route not found",
+    message: `The route ${req.originalUrl} does not exist`,
+    availableRoutes: [
+      "/",
+      "/api/health", 
+      "/api/auth/login",
+      "/api/auth/register",
+      "/api/invoices",
+      "/api/clients", 
+      "/api/users"
+    ],
+    timestamp: new Date().toISOString()
   });
-});
-
-// Connect to database before handling requests
-app.use(async (req, res, next) => {
-  try {
-    await connectToDatabase();
-    next();
-  } catch (error) {
-    res.status(500).json({ error: "Database connection failed" });
-  }
 });
 
 export default app; 
