@@ -67,12 +67,31 @@ app.get("/", (req, res) => {
   res.json({ 
     message: "Fromagerie Invoice API", 
     version: "1.0.0",
-    endpoints: {
-      health: "/api/health",
-      auth: "/api/auth",
-      invoices: "/api/invoices",
-      clients: "/api/clients",
-      users: "/api/users"
+    status: "✅ API is running",
+    routes: {
+      "Health Check": "GET /api/health",
+      "Authentication": {
+        "Login": "POST /api/auth/login",
+        "Register": "POST /api/auth/register",
+        "Get User": "GET /api/auth/me",
+        "Logout": "POST /api/auth/logout",
+        "Change Password": "PUT /api/auth/change-password"
+      },
+      "Invoices": {
+        "List": "GET /api/invoices",
+        "Create": "POST /api/invoices",
+        "Get": "GET /api/invoices/:id",
+        "Update": "PUT /api/invoices/:id",
+        "Delete": "DELETE /api/invoices/:id"
+      },
+      "Clients": {
+        "List": "GET /api/clients",
+        "Create": "POST /api/clients",
+        "Get": "GET /api/clients/:id",
+        "Update": "PUT /api/clients/:id",
+        "Delete": "DELETE /api/clients/:id"
+      },
+      "Users": "GET /api/users (admin only)"
     },
     timestamp: new Date().toISOString()
   });
@@ -88,12 +107,24 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log(`📍 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
 // Public routes (no authentication required)
+console.log("🔗 Loading auth routes at /api/auth");
 app.use("/api/auth", authRoutes);
 
 // Protected routes (authentication required)
+console.log("🔗 Loading invoice routes at /api/invoices");
 app.use("/api/invoices", authenticateToken, invoiceRoutes);
+
+console.log("🔗 Loading client routes at /api/clients");
 app.use("/api/clients", authenticateToken, clientRoutes);
+
+console.log("🔗 Loading user routes at /api/users");
 app.use("/api/users", userRoutes);
 
 // 404 handler for undefined routes
@@ -101,17 +132,21 @@ app.use("*", (req, res) => {
   res.status(404).json({
     error: "Route not found",
     message: `The route ${req.originalUrl} does not exist`,
+    hint: "Try /api/auth/login instead of /auth/login",
     availableRoutes: [
-      "/",
-      "/api/health", 
-      "/api/auth/login",
-      "/api/auth/register",
-      "/api/invoices",
-      "/api/clients", 
-      "/api/users"
+      "GET /",
+      "GET /api/health", 
+      "POST /api/auth/login",
+      "POST /api/auth/register",
+      "GET /api/auth/me",
+      "GET /api/invoices",
+      "GET /api/clients", 
+      "GET /api/users"
     ],
     timestamp: new Date().toISOString()
   });
 });
+
+console.log("✅ All routes loaded successfully");
 
 export default app; 
