@@ -7,7 +7,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "server.js",
+      "src": "index.js",
       "use": "@vercel/node"
     }
   ],
