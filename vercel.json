@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "fromagerie-invoice-backend",
   "builds": [
     {
       "src": "api/index.js",
@@ -9,20 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/api/index.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
